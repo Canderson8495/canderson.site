@@ -5,6 +5,8 @@ var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var logger = require('morgan');
 var request= require('request');
+var fs = require('fs');
+var https = require('https');
 
 var indexRouter = require('./routes/index');
 var folioRouter = require('./routes/folio');
@@ -45,10 +47,19 @@ app.use(function(err, req, res, next) {
   res.render('error');
 });
 
+var privateKey = fs.readFileSync( 'private.key' );
+var certificate = fs.readFileSync( 'certificate.crt' );
+
 app.set('port', 80);
 
 var server = app.listen(app.get('port'), function () {
     console.log('Express server listening on port ' + server.address().port);
 });
+
+https.createServer({
+    key: privateKey,
+    cert: certificate
+}, app).listen(443);
+
 
 module.exports = app;

@@ -11,7 +11,7 @@ router.get('/', function(req, res, next) {
 
 router.post('/', function(req,res) {
     var testEnv = false;
-    console.log(req.body);
+    console.log(process.env.ACCESS_TOKEN)
     
     if(
         req.body.captcha === undefined || 
@@ -26,23 +26,29 @@ router.post('/', function(req,res) {
         var secretKey = '6Lfa06UaAAAAAMPA8qYX6G4_FPMAjqT8E6jeYYsA'
     }
 
+    //We will access google api with this below
+
     const verifyUrl = `https://www.google.com/recaptcha/api/siteverify?secret=${secretKey}&response=${req.body.captcha}&remoteip=${req.connection.remoteAddress}`
-    console.log(verifyUrl);
 
     request(verifyUrl, (err,response,body) => {
-        console.log("We're this far");
         body = JSON.parse(body);
-        console.log(body);
         if(body.success !== undefined && !body.success){
             return res.json({"success": false, "msg": "Failed Captcha Verification"});
         }else{
-          const transporter = nodemailer.createTransport({
-              service: 'gmail',
+          console.log(process.env.EMAIL)
+          let transporter = nodemailer.createTransport({
+              host: 'smtp.gmail.com',
+              port: 465,
+              secure: true,
               auth: {
-                    user: process.env.EMAIL,
-                    pass: process.env.EMAIL_PASSWORD'
+                      type: 'OAuth2',
+                      user: process.env.EMAIL,
+                      clientId: process.env.CLIENT_ID,
+                      clientSecret: process.env.CLIENT_SECRET,
+                      refreshToken: process.env.REFRESH_TOKEN,
+                      accessToken: process.env.ACCESS_TOKEN
                   }
-           })
+           });
            const mailOptions = {
               from: process.env.EMAIL,
               to: process.env.EMAIL_TO,
